@@ -27,12 +27,13 @@ ENV PORT=4000
 
 # Create a non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nodejs --gid 1001
+    adduser --system --uid 1001 nodejs --gid 1001 && \
+    chown -R nodejs:nodejs /app
 
-# Copy build artifacts, production dependencies, and package files
-COPY --from=builder /app/dist ./dist
-COPY --from=production-deps /app/node_modules ./node_modules
-COPY package.json ./
+# Copy build artifacts, production dependencies, and package files with correct ownership
+COPY --chown=nodejs:nodejs --from=builder /app/dist ./dist
+COPY --chown=nodejs:nodejs --from=production-deps /app/node_modules ./node_modules
+COPY --chown=nodejs:nodejs package.json ./
 
 USER nodejs
 
