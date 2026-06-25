@@ -9,7 +9,7 @@
     "dev": "vite dev --port 4000",
     "generate-routes": "tsr generate",
     "build": "vite build",
-    "start": "srvx serve --dir . --entry ./dist/server/server.js --static ./dist/client --prod",
+    "start": "srvx serve --dir . --entry ./dist/server/server.js --static ./dist/client --prod --port 4000",
     "preview": "vite preview --port 4000",
     "test": "vitest run",
     "lint": "eslint",

@@ -12,6 +12,9 @@ const config = defineConfig({
   preview: {
     port: 4000,
   },
+  server:{
+    port: 4000,
+  },
 
   test: {
     environment: 'jsdom',
