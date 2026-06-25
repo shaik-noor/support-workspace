@@ -13,10 +13,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         return "Workspace Overview"
       case "/log-parsing":
         return "Log Parsing service"
-      case "/log-metrics":
-        return "Log Metrics & Performance"
-      case "/alerts":
-        return "Alert Rules & Incidents"
       default:
         return "Support Workspace"
     }
@@ -44,4 +40,3 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </TooltipProvider>
   )
 }
-

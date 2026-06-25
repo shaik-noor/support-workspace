@@ -10,23 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LogParsingRouteImport } from './routes/log-parsing'
-import { Route as LogMetricsRouteImport } from './routes/log-metrics'
-import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
 
 const LogParsingRoute = LogParsingRouteImport.update({
   id: '/log-parsing',
   path: '/log-parsing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogMetricsRoute = LogMetricsRouteImport.update({
-  id: '/log-metrics',
-  path: '/log-metrics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlertsRoute = AlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,35 +25,27 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/alerts': typeof AlertsRoute
-  '/log-metrics': typeof LogMetricsRoute
   '/log-parsing': typeof LogParsingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/alerts': typeof AlertsRoute
-  '/log-metrics': typeof LogMetricsRoute
   '/log-parsing': typeof LogParsingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/alerts': typeof AlertsRoute
-  '/log-metrics': typeof LogMetricsRoute
   '/log-parsing': typeof LogParsingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/alerts' | '/log-metrics' | '/log-parsing'
+  fullPaths: '/' | '/log-parsing'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alerts' | '/log-metrics' | '/log-parsing'
-  id: '__root__' | '/' | '/alerts' | '/log-metrics' | '/log-parsing'
+  to: '/' | '/log-parsing'
+  id: '__root__' | '/' | '/log-parsing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AlertsRoute: typeof AlertsRoute
-  LogMetricsRoute: typeof LogMetricsRoute
   LogParsingRoute: typeof LogParsingRoute
 }
 
@@ -76,20 +56,6 @@ declare module '@tanstack/react-router' {
       path: '/log-parsing'
       fullPath: '/log-parsing'
       preLoaderRoute: typeof LogParsingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/log-metrics': {
-      id: '/log-metrics'
-      path: '/log-metrics'
-      fullPath: '/log-metrics'
-      preLoaderRoute: typeof LogMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alerts': {
-      id: '/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -104,8 +70,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AlertsRoute: AlertsRoute,
-  LogMetricsRoute: LogMetricsRoute,
   LogParsingRoute: LogParsingRoute,
 }
 export const routeTree = rootRouteImport

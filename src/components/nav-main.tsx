@@ -47,19 +47,35 @@ export function NavMain({
                   asChild
                   isActive={item.isActive}
                   tooltip={item.title}
-                  className={`w-full transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                  className={`w-full rounded-lg border border-transparent transition-all duration-200 hover:border-sidebar-border/80 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground ${
                     item.isActive 
-                      ? "bg-sidebar-accent/80 font-semibold text-primary" 
+                      ? "border-primary/20 bg-primary/10 font-semibold text-primary shadow-sm"
                       : "text-muted-foreground/90"
                   }`}
                 >
-                  <Link to={item.url} className="flex items-center gap-3 w-full group-data-[state=collapsed]:justify-center">
+                  <Link
+                    to={item.url}
+                    aria-current={item.isActive ? "page" : undefined}
+                    className={`relative flex w-full items-center gap-3 group-data-[state=collapsed]:justify-center ${
+                      item.isActive ? "pl-2.5" : ""
+                    }`}
+                  >
+                    {item.isActive ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary group-data-[state=collapsed]:hidden"
+                      />
+                    ) : null}
                     {Icon && (
                       <Icon className={`transition-transform duration-200 group-hover:scale-105 ${
                         item.isActive ? "text-primary" : "text-muted-foreground"
                       }`} />
                     )}
-                    <span className="text-xs group-data-[state=collapsed]:hidden">{item.title}</span>
+                    <span className={`text-xs group-data-[state=collapsed]:hidden ${
+                      item.isActive ? "text-primary" : ""
+                    }`}>
+                      {item.title}
+                    </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

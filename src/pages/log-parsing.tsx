@@ -15,12 +15,12 @@ import {
   Filter,
   FileText,
   Trash2,
-  ChevronRight,
 } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { exportLogs, uploadLogs } from "@/lib/api"
 import { getVisibleEntries } from "@/lib/log-display"
+import { formatTimelineBucketLabel, formatTimestampForDisplay } from "@/lib/log-time"
 import type { LogEntry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
@@ -44,14 +44,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ChartConfig } from "@/components/ui/chart"
 import {
@@ -69,6 +61,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { LogAnalysisTable } from "@/components/log-analysis-table"
 
 const ACCEPTED_EXTENSIONS = [".log", ".out", ".xml", ".txt"]
 
@@ -353,7 +346,7 @@ export function LogParsingPage() {
 
         return {
           key,
-          label: formatTimestamp(new Date(key).toISOString()),
+          label: formatTimelineBucketLabel(new Date(key).toISOString(), windowSize),
           count: entries.length,
           errors,
           warnings,
@@ -842,91 +835,7 @@ export function LogParsingPage() {
 
                 {/* Table View Tab */}
                 <TabsContent value="logs" className="mt-4 focus-visible:outline-none">
-                  <div className="rounded-lg border border-border bg-card max-h-[600px] overflow-auto">
-                    <Table className="table-layout-fixed w-full">
-                      <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-xs">
-                        <TableRow>
-                          <TableHead className="w-[180px] text-xs py-2">Timestamp</TableHead>
-                          <TableHead className="w-[100px] text-xs py-2">Severity</TableHead>
-                          <TableHead className="w-[120px] text-xs py-2">Source</TableHead>
-                          <TableHead className="w-[140px] text-xs py-2">File</TableHead>
-                          <TableHead className="text-xs py-2">Message</TableHead>
-                          <TableHead className="w-[40px] text-xs py-2"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedEntries.length ? (
-                          paginatedEntries.map((entry, index) => {
-                            const upperLvl = entry.level.toUpperCase()
-                            const isErr = ["ERROR", "FATAL", "CRITICAL"].includes(upperLvl)
-                            const isWarn = ["WARN", "WARNING"].includes(upperLvl)
-                            
-                            // Replace multiple spaces and newlines with a single space for a neat single line preview
-                            const messagePreview = entry.message
-                              ? entry.message.replace(/\s+/g, " ")
-                              : ""
-
-                            return (
-                              <TableRow
-                                key={`${entry.filename}-${index}-${entry.timestamp ?? "na"}`}
-                                onClick={() => setSelectedEntry(entry)}
-                                className={cn(
-                                  "hover:bg-muted/50 cursor-pointer transition-colors border-l-4 group",
-                                  isErr
-                                    ? "border-l-destructive/80 hover:border-l-destructive bg-destructive/1"
-                                    : isWarn
-                                    ? "border-l-amber-500/80 hover:border-l-amber-500 bg-amber-500/1"
-                                    : "border-l-transparent hover:border-l-primary/60"
-                                )}
-                              >
-                                <TableCell className="font-mono text-[11px] text-muted-foreground py-2 h-9 truncate">
-                                  {formatTimestamp(entry.timestamp)}
-                                </TableCell>
-                                <TableCell className="py-2 h-9">
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "h-5 text-[10px] font-semibold py-0 tracking-wide rounded-sm uppercase border",
-                                      isErr
-                                        ? "bg-destructive/10 text-destructive border-destructive/20"
-                                        : isWarn
-                                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                                        : "bg-primary/10 text-primary border-primary/20"
-                                    )}
-                                  >
-                                    {entry.level.toUpperCase()}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="font-medium text-xs py-2 h-9 truncate max-w-[120px]">
-                                  {entry.source}
-                                </TableCell>
-                                <TableCell className="text-muted-foreground text-xs py-2 h-9 truncate max-w-[140px]">
-                                  {entry.filename}
-                                </TableCell>
-                                <TableCell className="text-foreground/90 font-mono text-[11px] py-2 h-9 max-w-[400px] xl:max-w-[600px]">
-                                  <div className="overflow-x-auto whitespace-nowrap scrollbar-none">
-                                    {messagePreview}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="py-2 text-right text-muted-foreground/0 group-hover:text-muted-foreground transition-colors pr-2">
-                                  <ChevronRight className="size-3.5" />
-                                </TableCell>
-                              </TableRow>
-                            )
-                          })
-                        ) : (
-                          <TableRow>
-                            <TableCell
-                              colSpan={6}
-                              className="py-12 text-center text-sm text-muted-foreground"
-                            >
-                              No matching log items. Try modifying your filter rules above.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <LogAnalysisTable entries={paginatedEntries} onSelectEntry={setSelectedEntry} />
 
                   {/* Pagination Controls */}
                   {visibleEntries.length > 0 && (
@@ -1065,11 +974,11 @@ export function LogParsingPage() {
 
       {/* Side Slide Inspector (Sheet Details Drawer) */}
       <Sheet open={selectedEntry !== null} onOpenChange={(open) => { if (!open) setSelectedEntry(null) }}>
-        <SheetContent className="sm:max-w-xl flex flex-col h-full overflow-hidden border-l border-border bg-popover text-foreground p-0 shadow-2xl">
+        <SheetContent className="sm:max-w-xl flex min-h-0 flex-col overflow-hidden border-l border-border bg-popover text-foreground p-0 shadow-2xl">
           {selectedEntry && (
             <>
               {/* Header */}
-              <SheetHeader className="p-6 border-b border-border bg-muted/20">
+              <SheetHeader className="shrink-0 border-b border-border bg-muted/20 p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge
                     variant="outline"
@@ -1086,7 +995,7 @@ export function LogParsingPage() {
                   </Badge>
                   <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5">
                     <Calendar className="size-3" />
-                    {formatTimestamp(selectedEntry.timestamp)}
+                    {formatTimestampForDisplay(selectedEntry.timestamp)}
                   </span>
                 </div>
                 <SheetTitle className="text-lg font-bold tracking-tight">
@@ -1111,8 +1020,8 @@ export function LogParsingPage() {
               </SheetHeader>
 
               {/* Scrollable details wrapper */}
-              <ScrollArea className="flex-1 p-6">
-                <div className="space-y-6">
+              <ScrollArea className="min-h-0 flex-1 overscroll-contain">
+                <div className="space-y-6 p-6">
                   {/* Copy & Raw block */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -1248,11 +1157,4 @@ function isAcceptedFile(filename: string) {
   return ACCEPTED_EXTENSIONS.some((extension) =>
     filename.toLowerCase().endsWith(extension),
   )
-}
-
-function formatTimestamp(value: string | null) {
-  if (!value) return "—"
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return "—"
-  return parsed.toLocaleString()
 }

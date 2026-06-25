@@ -11,6 +11,28 @@ const LOG_LEVELS = [
   "TRACE",
 ]
 
+const TIMEZONE_ABBREVIATIONS = [
+  "UTC",
+  "GMT",
+  "BST",
+  "CET",
+  "CEST",
+  "EET",
+  "EEST",
+  "PST",
+  "PDT",
+  "MST",
+  "MDT",
+  "CST",
+  "CDT",
+  "EST",
+  "EDT",
+  "IST",
+  "JST",
+  "AEST",
+  "AEDT",
+]
+
 function normalizeLevel(level: string): string {
   const upper = level.toUpperCase()
   if (upper === "WARN") return "WARNING"
@@ -20,6 +42,10 @@ function normalizeLevel(level: string): string {
 function parseTimestampToISO(tsStr: string, isMissingYear: boolean): string | null {
   try {
     let cleanStr = tsStr.trim()
+    cleanStr = cleanStr.replace(
+      new RegExp(`\\s(?:${TIMEZONE_ABBREVIATIONS.join("|")})$`, "i"),
+      "",
+    )
     // Replace comma with dot for milliseconds so standard Date constructor can parse it
     cleanStr = cleanStr.replace(/,(\d+)/, '.$1')
     // Replace slashes with dashes
@@ -82,7 +108,13 @@ export function parseLine(line: string, filename: string): LogEntry {
 
   // Define patterns and check them. Match the 4-digit year formats first, then the 2-digit/syslog formats.
   const patterns = [
-    { regex: /(\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:?\d{2})?)/i, missingYear: false },
+    {
+      regex: new RegExp(
+        `(\\d{4}[-/]\\d{2}[-/]\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?(?:\\s(?:${TIMEZONE_ABBREVIATIONS.join("|")}))?)`,
+        "i",
+      ),
+      missingYear: false,
+    },
     { regex: /([A-Za-z]{3}\s+\d{1,2}\s+\d{4}\s+\d{2}:\d{2}:\d{2})/i, missingYear: false },
     { regex: /([A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})/i, missingYear: true }
   ]

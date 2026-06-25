@@ -39,6 +39,26 @@ describe("Client-side log parser", () => {
     expect(result.entries[0].message).toBe("slash connection failed")
   })
 
+  it("parses timestamps with timezone abbreviations without leaving them in the message", async () => {
+    const logFile = new File(
+      [
+        "2026-04-08 08:08:45,375 BST org.apache.catalina.startup.HostConfig deployWAR INFO: [main] Deployment of web application archive [/home/apps/Informatica/10.5.1/isp/webapps/coreservices.war] has finished in [6,384] ms",
+      ],
+      "coreservices-2026-04-08.log",
+      { type: "text/plain" },
+    )
+
+    const result = await uploadLogs([logFile])
+
+    expect(result.count).toBe(1)
+    expect(result.entries[0].timestamp).toBe(new Date("2026-04-08 08:08:45.375").toISOString())
+    expect(result.entries[0].level).toBe("INFO")
+    expect(result.entries[0].source).toBe("main")
+    expect(result.entries[0].message.startsWith("BST")).toBe(false)
+    expect(result.entries[0].message).toContain("org.apache.catalina.startup.HostConfig deployWAR")
+    expect(result.entries[0].message).toContain("has finished in [6,384] ms")
+  })
+
   it("falls back to filename timestamp and propagates to multiline exceptions", async () => {
     const logFile = new File(
       [
