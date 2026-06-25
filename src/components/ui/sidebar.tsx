@@ -41,6 +41,35 @@ type SidebarContextProps = {
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
 
+function getStoredSidebarOpen(defaultOpen: boolean) {
+  if (typeof window === "undefined") {
+    return defaultOpen
+  }
+
+  const storedOpen = window.localStorage.getItem(SIDEBAR_COOKIE_NAME)
+  if (storedOpen === "true") return true
+  if (storedOpen === "false") return false
+
+  const cookieEntry = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
+    ?.split("=")[1]
+
+  if (cookieEntry === "true") return true
+  if (cookieEntry === "false") return false
+
+  return defaultOpen
+}
+
+function persistSidebarOpen(openState: boolean) {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  window.localStorage.setItem(SIDEBAR_COOKIE_NAME, String(openState))
+  document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+}
+
 function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
@@ -68,7 +97,7 @@ function SidebarProvider({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen)
+  const [_open, _setOpen] = React.useState(() => getStoredSidebarOpen(defaultOpen))
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
@@ -79,8 +108,7 @@ function SidebarProvider({
         _setOpen(openState)
       }
 
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      persistSidebarOpen(openState)
     },
     [setOpenProp, open]
   )
